@@ -1,7 +1,6 @@
 import time
 import numpy as np
 import json
-from typing import Any
 
 
 class Task:
@@ -24,34 +23,48 @@ class Task:
         return self
 
     def to_json(self) -> str:
-        """Serialize Task to JSON (string)."""
-        payload: dict[str, Any] = {
+        payload = {
             "identifier": self.identifier,
             "size": self.size,
             "a": self.a.tolist(),
             "b": self.b.tolist(),
-            "x": None if self.x is None else self.x.tolist(),
-            "time": self.time,
+            "x": self.x.tolist(),
+            "time": float(self.time),
         }
         return json.dumps(payload)
 
     @staticmethod
     def from_json(text: str) -> "Task":
-        """Deserialize Task from JSON (string)."""
         data = json.loads(text)
 
-        t = Task(identifier=data["identifier"], size=data["size"])
+        size = int(data["size"])
+        t = Task(identifier=int(data["identifier"]), size=size)
 
-        # remplacer les valeurs aléatoires créées par __init__
-        t.a = np.array(data["a"], dtype=float)
-        t.b = np.array(data["b"], dtype=float)
-
-        if data.get("x") is None:
-            t.x = None
+        # A
+        a_raw = data.get("a", None)
+        if a_raw is None or a_raw == []:
+            t.a = np.random.rand(size, size)
         else:
-            t.x = np.array(data["x"], dtype=float)
+            if isinstance(a_raw[0], list):
+                t.a = np.array(a_raw, dtype=float)
+            else:
+                t.a = np.array(a_raw, dtype=float).reshape((size, size))
 
-        t.time = float(data["time"]) if data.get("time") is not None else 0.0
+        # b
+        b_raw = data.get("b", None)
+        if b_raw is None or b_raw == []:
+            t.b = np.random.rand(size)
+        else:
+            t.b = np.array(b_raw, dtype=float).reshape((size,))
+
+        #  x / time
+        x_raw = data.get("x", None)
+        if x_raw is None or x_raw == []:
+            t.x = np.zeros(size)
+        else:
+            t.x = np.array(x_raw, dtype=float).reshape((size,))
+
+        t.time = float(data.get("time", 0.0))
         return t
 
     def __eq__(self, other: object) -> bool:
@@ -67,8 +80,7 @@ class Task:
             return False
         if not np.allclose(self.b, other.b):
             return False
-
-        # x peut être None ou un array
+        # x peut être None
         if self.x is None and other.x is None:
             pass
         elif (self.x is None) != (other.x is None):

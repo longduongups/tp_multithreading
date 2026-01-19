@@ -22,7 +22,7 @@ def main():
     boss = Boss()
 
     n_tasks = 5
-    n_minions = 2  # nombre de minions lancés
+    n_minions = 1  # nombre de minions lancés
 
     boss.submit_tasks(n=n_tasks, size=200)
     results = boss.collect_results(n=n_tasks)
